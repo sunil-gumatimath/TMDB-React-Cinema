@@ -1,43 +1,80 @@
 # Reel Radar — React + Vite Movie Explorer
 
-Browse popular movies powered by the TMDB API with a clean React + Vite setup and Tailwind CSS styling.
+Browse and search movies powered by the TMDB API, with trending searches tracked via Appwrite. Styled with Tailwind CSS and built on Vite.
 
 ## Features
 
-- Fetches popular movies from TMDB (Discover API)
-- Search input (controlled) ready for filtering
-- Tailwind CSS v4 styles via `@tailwindcss/vite`
-- Fast dev server and production build with Vite
+- TMDB integration: Discover popular movies and search by query
+- Debounced search using `react-use` to limit API calls
+- Trending section backed by Appwrite (top searched terms/movies)
+- Accessible loading spinner component
+- Tailwind CSS v4 via `@tailwindcss/vite`
 
 ## Tech Stack
 
 - React 19, React DOM 19
 - Vite 7
-- Tailwind CSS 4 (`@tailwindcss/vite` plugin)
+- Tailwind CSS 4 (`@tailwindcss/vite`)
+- Appwrite JS SDK
+- react-use (debounce)
 
 ## Prerequisites
 
 - Node.js 18+ and npm
-- A TMDB account and API token (v4 Read Access Token)
+- TMDB v4 Read Access Token
+- Appwrite project (Cloud or self-hosted)
 
 ## Setup
 
-1. Install dependencies:
-   ```bash
-   npm install
-   ```
-2. Create a `.env` file in the project root and add your TMDB v4 Read Access Token:
-   ```bash
-   VITE_TMDB_TOKEN=YOUR_TMDB_V4_READ_ACCESS_TOKEN
-   ```
-   - Get this from TMDB: Account Settings → API → “v4 auth” → Copy “Read Access Token”.
+1) Install dependencies
+```bash
+npm install
+```
+
+2) Environment variables (create `.env` in project root)
+```bash
+# TMDB
+VITE_TMDB_TOKEN=YOUR_TMDB_V4_READ_ACCESS_TOKEN
+
+# Appwrite
+VITE_APPWRITE_PROJECT_ID=YOUR_PROJECT_ID
+VITE_APPWRITE_DATABASE_ID=YOUR_DATABASE_ID
+VITE_APPWRITE_COLLECTION_ID=YOUR_COLLECTION_ID
+```
+
+3) Appwrite configuration
+- The SDK is configured in `src/components/appwrite.js` to use `https://cloud.appwrite.io/v1`.
+- Create a Database and a Collection with attributes matching usage:
+  - `searchTerm` (string)
+  - `count` (integer)
+  - `movie_id` (integer or string)
+  - `poster_url` (string)
+- Ensure your Appwrite project allows web requests from your dev/production domains (CORS) and that the API keys/permissions fit your security needs. This project uses client-side SDK calls.
 
 ## Scripts
 
-- Start dev server: `npm run dev`
-- Build for production: `npm run build`
-- Preview production build: `npm run preview`
+- Dev server: `npm run dev`
+- Build: `npm run build`
+- Preview build: `npm run preview`
 - Lint: `npm run lint`
+
+## How it works
+
+- `src/App.jsx`
+  - Builds TMDB endpoint based on search term: Discover for empty queries, Search for non-empty queries.
+  - Debounces user input by 500ms (`useDebounce`) before fetching.
+  - After successful search, updates Appwrite with the term and top result (`updateSearchCount`).
+  - Loads trending items from Appwrite (`getTrendingMovies`) and displays top 5 by `count`.
+
+- `src/components/MovieCard.jsx`
+  - Displays poster, title, rating, language, and year.
+  - Poster path: `https://image.tmdb.org/t/p/w500/${poster_path}` with fallback `/No-Poster.png`.
+
+- `src/components/Spinner.jsx`
+  - Simple SVG-based loading indicator.
+
+- `src/components/Search.jsx`
+  - Controlled input bound to `searchTerm`.
 
 ## Project Structure
 
@@ -52,7 +89,10 @@ react-project/
 │  └─ star.svg
 ├─ src/
 │  ├─ components/
-│  │  └─ Search.jsx
+│  │  ├─ MovieCard.jsx
+│  │  ├─ Search.jsx
+│  │  ├─ Spinner.jsx
+│  │  └─ appwrite.js
 │  ├─ App.jsx
 │  ├─ App.css
 │  ├─ index.css
@@ -64,15 +104,17 @@ react-project/
 
 ## Environment & API Notes
 
-- The app reads your token from `import.meta.env.VITE_TMDB_TOKEN` and sends it as a Bearer token.
-- Current endpoint used in `App.jsx`:
-  - `GET https://api.themoviedb.org/3/discover/movie?sort_by=popularity.desc`
-- If requests fail at runtime, confirm your `.env` is set and the token is valid.
+- TMDB token is read from `import.meta.env.VITE_TMDB_TOKEN` and sent as a Bearer token.
+- Endpoints used:
+  - Discover: `GET /discover/movie?sort_by=popularity.desc`
+  - Search: `GET /search/movie?query={encoded}`
+- Appwrite reads/writes documents in the provided collection and orders trending by `count`.
 
-## Development Tips
+## Troubleshooting
 
-- Tailwind CSS is configured via `@tailwindcss/vite`; utilities and layers are in `src/App.css`.
-- Static assets are served from `public/` and referenced with root paths like `/hero-img.png`.
+- Empty results when searching: verify `VITE_TMDB_TOKEN` is set and valid; ensure the search URL encodes the query.
+- Trending not visible: confirm Appwrite env vars and that the collection exists with the attributes above; allow your app’s origin in Appwrite CORS.
+- Images not loading: ensure `poster_url` includes `https://image.tmdb.org/t/p/w500` and that `/No-Poster.png` exists under `public/`.
 
 ## License
 
@@ -80,4 +122,5 @@ MIT
 
 ## Acknowledgements
 
-- Data provided by [The Movie Database (TMDB)](https://www.themoviedb.org/)
+- Data: The Movie Database (TMDB)
+- Backend-as-a-service: Appwrite
