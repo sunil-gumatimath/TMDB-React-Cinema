@@ -2,6 +2,17 @@
 
 Browse and search movies powered by the TMDB API, with trending searches tracked via Appwrite. Styled with Tailwind CSS and built on Vite.
 
+## Main features
+
+- Discover popular movies from TMDB (sorted by popularity)
+- Search movies with 500ms debounced input
+- Trending section backed by Appwrite (top searched movies)
+- Search analytics: increments count for successful queries, stores top result metadata
+- Movie cards with poster, title, rating (1 decimal), language, and year
+- Poster fallback when no poster is available
+- Loading spinner and error messaging
+- Responsive UI (Tailwind CSS v4) and fast Vite workflow
+
 ## Features
 
 - TMDB integration: Discover popular movies and search by query
@@ -40,6 +51,14 @@ VITE_TMDB_TOKEN=YOUR_TMDB_V4_READ_ACCESS_TOKEN
 VITE_APPWRITE_PROJECT_ID=YOUR_PROJECT_ID
 VITE_APPWRITE_DATABASE_ID=YOUR_DATABASE_ID
 VITE_APPWRITE_COLLECTION_ID=YOUR_COLLECTION_ID
+```
+
+Example (do not commit secrets):
+```bash
+VITE_TMDB_TOKEN=eyJhbGciOiJIUzI1NiIsInR...
+VITE_APPWRITE_PROJECT_ID=66abc1234567890fedcb
+VITE_APPWRITE_DATABASE_ID=movies
+VITE_APPWRITE_COLLECTION_ID=trending
 ```
 
 3) Appwrite configuration
@@ -110,11 +129,23 @@ react-project/
   - Search: `GET /search/movie?query={encoded}`
 - Appwrite reads/writes documents in the provided collection and orders trending by `count`.
 
+Appwrite document shape used by this app (minimally):
+```json
+{
+  "searchTerm": "string",
+  "count": 1,
+  "movie_id": 123,
+  "poster_url": "https://image.tmdb.org/t/p/w500/abc123.jpg"
+}
+```
+
 ## Troubleshooting
 
 - Empty results when searching: verify `VITE_TMDB_TOKEN` is set and valid; ensure the search URL encodes the query.
 - Trending not visible: confirm Appwrite env vars and that the collection exists with the attributes above; allow your app’s origin in Appwrite CORS.
 - Images not loading: ensure `poster_url` includes `https://image.tmdb.org/t/p/w500` and that `/No-Poster.png` exists under `public/`.
+- CORS with Appwrite: add your dev URL (e.g., `http://localhost:5173`) and production domain to allowed origins in the Appwrite project settings.
+- Env updates not taking effect: stop and restart the dev server after changing `.env` values.
 
 ## License
 
