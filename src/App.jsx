@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react'
 import Search from "./components/Search.jsx";
 import Spinner from "./components/Spinner.jsx";
 import MovieCard from './components/MovieCard.jsx';
+import { useDebounce } from 'react-use';
+import { updateSearchCount } from './components/appwrite.js';
 
 const API_BASE_URL = 'https://api.themoviedb.org/3'
 
@@ -21,15 +23,23 @@ const App = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [movieList, serMovieList] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
 
-  const fetchMovies = async () => {
+
+  // Debounce the search term to prevent making too many API requests
+  // by waiting for the user to stop typing for 500ms
+  useDebounce(() => setDebouncedSearchTerm(searchTerm), 500, [searchTerm])
+
+  const fetchMovies = async (query = '') => {
 
     setIsLoading(true);
     setErrorMessage('');
 
     try {
-      const endpoint = `${API_BASE_URL}/discover/movie?sort_by=popularity.desc`;
+      const endpoint = query
+        ? `${API_BASE_URL}/search/movie?query=${encodeURIComponent(query)}`
+        : `${API_BASE_URL}/discover/movie?sort_by=popularity.desc`;
 
       const response = await fetch(endpoint, API_OPTIONS);
 
@@ -39,7 +49,7 @@ const App = () => {
 
       const data = await response.json();
 
-      
+
       if (data.Response === 'False') {
         setErrorMessage(data.Error || 'Failed to fetch movies');
         serMovieList([]);
@@ -48,17 +58,22 @@ const App = () => {
 
       serMovieList(data.results || []);
 
+      if (query && data.results.length > 0) {
+        await updateSearchCount(query, data.results[0]);
+      }
+
+
     } catch (error) {
       console.error(`error fetching movies ${error}`);
       setErrorMessage('Error fetching movies. please try again later.')
-    }finally{
+    } finally {
       setIsLoading(false);
     }
   }
 
   useEffect(() => {
-    fetchMovies();
-  }, [])
+    fetchMovies(debouncedSearchTerm);
+  }, [debouncedSearchTerm])
 
   return (
     <main>
@@ -79,11 +94,11 @@ const App = () => {
               isLoading ? (
                 < Spinner />
               ) : errorMessage ? (
-                <p className='tetxt-red-500'>{errorMessage}</p>
-              ) :(
+                <p className='text-red-500'>{errorMessage}</p>
+              ) : (
                 <ul>
-                  {movieList.map((movie)=> (
-                    <MovieCard key={movie.id} movie={movie}/>
+                  {movieList.map((movie) => (
+                    <MovieCard key={movie.id} movie={movie} />
                   ))}
                 </ul>
               )
