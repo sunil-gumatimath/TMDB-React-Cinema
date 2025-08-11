@@ -1,5 +1,7 @@
 # Reel Radar — React + Vite Movie Explorer
 
+Live demo: https://ted-tmdb-movie-07.netlify.app/
+
 Browse and search movies powered by the TMDB API, with trending searches tracked via Appwrite. Styled with Tailwind CSS and built on Vite.
 
 ## Main features
