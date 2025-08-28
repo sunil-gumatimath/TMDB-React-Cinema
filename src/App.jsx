@@ -21,11 +21,11 @@ const App = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-  
+
   const [movieList, serMovieList] = useState([]);
   const [errorMessage, setErrorMessage] = useState('');
   const [trendingMovies, setTrendingMovies] = useState([]);
-  
+
   const [isLoading, setIsLoading] = useState(false);
 
 
@@ -110,16 +110,16 @@ const App = () => {
                 <h2>Trending Movies</h2>
                 <ul>
                   {
-                    trendingMovies.map((movie,index)=> (
+                    trendingMovies.map((movie, index) => (
                       <li key={movie.$id}>
-                        <p>{index+1}</p>
+                        <p>{index + 1}</p>
                         <img src={movie.poster_url} alt={movie.title} />
                       </li>
                     ))
                   }
                 </ul>
               </section>
-          )}
+            )}
 
           <section className='all-movies'>
             <h2>All Movies</h2>
