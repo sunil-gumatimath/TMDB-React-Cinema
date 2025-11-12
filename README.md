@@ -1,4 +1,4 @@
-# Reel Radar — React + Vite Movie Explorer
+# MovieStream — React + Vite Movie Explorer
 
 Live demo: https://ted-tmdb-movie-07.netlify.app/
 
