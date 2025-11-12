@@ -4,16 +4,14 @@ Live demo: https://ted-tmdb-movie-07.netlify.app/
 
 Browse and search movies powered by the TMDB API, with trending searches tracked via Appwrite. Styled with Tailwind CSS and built on Vite.
 
-## Main features
+## Key Features
 
-- Discover popular movies from TMDB (sorted by popularity)
-- Search movies with 500ms debounced input
-- Trending section backed by Appwrite (top searched movies)
-- Search analytics: increments count for successful queries, stores top result metadata
-- Movie cards with poster, title, rating (1 decimal), language, and year
-- Poster fallback when no poster is available
-- Loading spinner and error messaging
-- Responsive UI (Tailwind CSS v4) and fast Vite workflow
+- Movie discovery and search via TMDB API
+- Debounced search (500ms) to limit API calls
+- Trending movies based on search popularity (Appwrite)
+- Movie cards: poster, title, rating, language, year
+- Responsive design with Tailwind CSS
+- Loading spinner and error handling
 
 ## Features
 
@@ -41,7 +39,7 @@ Browse and search movies powered by the TMDB API, with trending searches tracked
 
 1) Install dependencies
 ```bash
-npm install
+bun install
 ```
 
 2) Environment variables (create `.env` in project root)
@@ -74,10 +72,10 @@ VITE_APPWRITE_COLLECTION_ID=trending
 
 ## Scripts
 
-- Dev server: `npm run dev`
-- Build: `npm run build`
-- Preview build: `npm run preview`
-- Lint: `npm run lint`
+- Dev server: `bun run dev` (runs on http://localhost:3000)
+- Build: `bun run build`
+- Preview build: `bun run preview`
+- Lint: `bun run lint`
 
 ## How it works
 
