@@ -8,8 +8,14 @@
   NPM_FLAGS = "--no-install"
 
 [[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/api/:splat"
+  from = "/api/discover/movie"
+  to = "/.netlify/functions/api"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/search/movie"
+  to = "/.netlify/functions/search"
   status = 200
   force = true
 

@@ -27,8 +27,8 @@ const handler = async (event) => {
   try {
     const { queryStringParameters } = event;
     
-    // Determine the endpoint based on the original request
-    let tmdbUrl = 'https://api.themoviedb.org/3/discover/movie';
+    // Build TMDB URL for search
+    let tmdbUrl = 'https://api.themoviedb.org/3/search/movie';
     
     // Add query parameters if present
     if (queryStringParameters) {
@@ -47,7 +47,7 @@ const handler = async (event) => {
       };
     }
 
-    console.log('Fetching TMDB URL:', tmdbUrl);
+    console.log('Fetching TMDB search URL:', tmdbUrl);
 
     const response = await fetch(tmdbUrl, {
       method: 'GET',
