@@ -1,10 +1,11 @@
 [build]
   publish = "dist"
-  command = "bun run build"
+  command = "bun install && bun run build"
 
 [build.environment]
-  NODE_VERSION = "18"
+  NODE_VERSION = "20"
   BUN_VERSION = "latest"
+  NPM_FLAGS = "--no-install"
 
 [[redirects]]
   from = "/api/*"
