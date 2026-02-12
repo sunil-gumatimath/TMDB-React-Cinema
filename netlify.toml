@@ -9,9 +9,16 @@
 
 [[redirects]]
   from = "/api/*"
-  to = "https://api.themoviedb.org/3/:splat"
+  to = "/.netlify/functions/api/:splat"
   status = 200
-  headers = {X-From = "Netlify"}
+  force = true
+
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type, Authorization"
 
 [[headers]]
   for = "/*"

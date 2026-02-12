@@ -8,14 +8,7 @@ import BackToTop from './components/BackToTop.jsx';
 import { useDebounce } from 'react-use';
 import { getTrendingMovies, updateSearchCount } from './components/appwrite.js';
 
-const API_BASE_URL = import.meta.env.DEV ? '/api' : 'https://api.themoviedb.org/3'
-
-// Multiple CORS proxy options for reliability
-const CORS_PROXIES = [
-  'https://cors-anywhere.herokuapp.com/',
-  'https://api.allorigins.win/raw?url=',
-  'https://corsproxy.io/?'
-];
+const API_BASE_URL = '/api'
 
 const API_KEY = import.meta.env.VITE_TMDB_TOKEN;
 
@@ -30,7 +23,7 @@ const API_OPTIONS = {
   method: 'GET',
   headers: {
     accept: 'application/json',
-    ...(import.meta.env.DEV ? {} : { Authorization: `Bearer ${API_KEY}` })
+    Authorization: `Bearer ${API_KEY}`
   },
   timeout: 10000 // 10 second timeout
 }
@@ -89,63 +82,19 @@ const App = () => {
       abortControllerRef.current = new AbortController();
       const timeoutId = setTimeout(() => abortControllerRef.current.abort(), 10000);
 
-      let endpoint = query
+      const endpoint = query
         ? `${API_BASE_URL}/search/movie?query=${encodeURIComponent(query)}&page=${pageNum}`
         : `${API_BASE_URL}/discover/movie?sort_by=popularity.desc&page=${pageNum}`;
 
-      let response;
-      let lastError;
-
-      // Try direct API call first (works in production with proper CORS, or via Vite proxy in dev)
-      try {
-        response = await fetch(endpoint, {
-          ...API_OPTIONS,
-          signal: abortControllerRef.current.signal
-        });
-        clearTimeout(timeoutId);
-      } catch (directError) {
-        clearTimeout(timeoutId);
-        lastError = directError;
-        
-        // Only try CORS proxies if not in development mode (since Vite proxy should handle it)
-        if (!import.meta.env.DEV) {
-          // If direct call fails, try CORS proxies
-          for (const proxy of CORS_PROXIES) {
-            try {
-              const proxyController = new AbortController();
-              const proxyTimeoutId = setTimeout(() => proxyController.abort(), 8000);
-              
-              let proxyUrl;
-              if (proxy.includes('allorigins')) {
-                proxyUrl = `${proxy}${encodeURIComponent(endpoint)}`;
-              } else {
-                proxyUrl = `${proxy}${endpoint}`;
-              }
-              
-              response = await fetch(proxyUrl, {
-                ...API_OPTIONS,
-                signal: proxyController.signal
-              });
-              
-              clearTimeout(proxyTimeoutId);
-              
-              if (response.ok) {
-                console.log(`✅ Successfully used proxy: ${proxy}`);
-                break;
-              }
-            } catch (proxyError) {
-              console.warn(`❌ Proxy ${proxy} failed:`, proxyError.message);
-              lastError = proxyError;
-              continue;
-            }
-          }
-        }
-      }
+      const response = await fetch(endpoint, {
+        ...API_OPTIONS,
+        signal: abortControllerRef.current.signal
+      });
 
       clearTimeout(timeoutId);
 
-      if (!response || !response.ok) {
-        throw new Error(lastError?.message || `HTTP ${response?.status || 'Unknown'}: ${response?.statusText || 'Network error'}`);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
       const data = await response.json();
