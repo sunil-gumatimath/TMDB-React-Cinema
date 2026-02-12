@@ -178,10 +178,6 @@ react-project/
 - **Slow initial load**: Check lazy loading implementation
 - **API rate limits**: Implement additional debouncing if needed
 
-## License
-
-MIT
-
 ## Acknowledgements
 
 - **Data**: The Movie Database (TMDB)
