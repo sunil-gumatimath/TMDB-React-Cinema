@@ -1,0 +1,25 @@
+[build]
+  publish = "dist"
+  command = "bun run build"
+
+[build.environment]
+  NODE_VERSION = "18"
+  BUN_VERSION = "latest"
+
+[[redirects]]
+  from = "/api/*"
+  to = "https://api.themoviedb.org/3/:splat"
+  status = 200
+  headers = {X-From = "Netlify"}
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type, Authorization"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

@@ -8,10 +8,14 @@ import BackToTop from './components/BackToTop.jsx';
 import { useDebounce } from 'react-use';
 import { getTrendingMovies, updateSearchCount } from './components/appwrite.js';
 
-const API_BASE_URL = 'https://api.themoviedb.org/3'
+const API_BASE_URL = import.meta.env.DEV ? '/api' : 'https://api.themoviedb.org/3'
 
-// Fallback CORS proxy for development
-const CORS_PROXY = 'https://corsproxy.io/?';
+// Multiple CORS proxy options for reliability
+const CORS_PROXIES = [
+  'https://cors-anywhere.herokuapp.com/',
+  'https://api.allorigins.win/raw?url=',
+  'https://corsproxy.io/?'
+];
 
 const API_KEY = import.meta.env.VITE_TMDB_TOKEN;
 
@@ -26,7 +30,7 @@ const API_OPTIONS = {
   method: 'GET',
   headers: {
     accept: 'application/json',
-    Authorization: `Bearer ${API_KEY}`
+    ...(import.meta.env.DEV ? {} : { Authorization: `Bearer ${API_KEY}` })
   },
   timeout: 10000 // 10 second timeout
 }
@@ -90,30 +94,58 @@ const App = () => {
         : `${API_BASE_URL}/discover/movie?sort_by=popularity.desc&page=${pageNum}`;
 
       let response;
+      let lastError;
+
+      // Try direct API call first (works in production with proper CORS, or via Vite proxy in dev)
       try {
         response = await fetch(endpoint, {
           ...API_OPTIONS,
           signal: abortControllerRef.current.signal
         });
+        clearTimeout(timeoutId);
       } catch (directError) {
         clearTimeout(timeoutId);
-        const proxyController = new AbortController();
-        const proxyTimeoutId = setTimeout(() => proxyController.abort(), 10000);
+        lastError = directError;
         
-        endpoint = `${CORS_PROXY}${endpoint}`;
-        response = await fetch(endpoint, {
-          ...API_OPTIONS,
-          signal: proxyController.signal
-        });
-        
-        clearTimeout(proxyTimeoutId);
+        // Only try CORS proxies if not in development mode (since Vite proxy should handle it)
+        if (!import.meta.env.DEV) {
+          // If direct call fails, try CORS proxies
+          for (const proxy of CORS_PROXIES) {
+            try {
+              const proxyController = new AbortController();
+              const proxyTimeoutId = setTimeout(() => proxyController.abort(), 8000);
+              
+              let proxyUrl;
+              if (proxy.includes('allorigins')) {
+                proxyUrl = `${proxy}${encodeURIComponent(endpoint)}`;
+              } else {
+                proxyUrl = `${proxy}${endpoint}`;
+              }
+              
+              response = await fetch(proxyUrl, {
+                ...API_OPTIONS,
+                signal: proxyController.signal
+              });
+              
+              clearTimeout(proxyTimeoutId);
+              
+              if (response.ok) {
+                console.log(`✅ Successfully used proxy: ${proxy}`);
+                break;
+              }
+            } catch (proxyError) {
+              console.warn(`❌ Proxy ${proxy} failed:`, proxyError.message);
+              lastError = proxyError;
+              continue;
+            }
+          }
+        }
       }
 
       clearTimeout(timeoutId);
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+      if (!response || !response.ok) {
+        throw new Error(lastError?.message || `HTTP ${response?.status || 'Unknown'}: ${response?.statusText || 'Network error'}`);
       }
 
       const data = await response.json();
@@ -174,8 +206,8 @@ const App = () => {
         ];
         setMovieList(demoMovies);
         setHasMore(false);
-      } else if (error.message.includes('Failed to fetch')) {
-        errorMessage = 'Network error. Please check your internet connection.';
+      } else if (error.message.includes('Failed to fetch') || error.message.includes('Network error')) {
+        errorMessage = 'Network error. Please check your internet connection or try again later.';
       } else if (error.message.includes('401')) {
         errorMessage = 'Invalid API key. Please check your TMDB configuration.';
       } else if (error.message.includes('404')) {
